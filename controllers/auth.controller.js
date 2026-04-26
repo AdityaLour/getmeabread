@@ -1,6 +1,5 @@
+console.log("Signup route hit");
 const User = require("../models/user.model");
-
-
 
 async function signUpUser(req, res) {
   const name = req.body.name;
@@ -9,7 +8,7 @@ async function signUpUser(req, res) {
   try {
     if (
       name &&
-      name.length > 3 &&
+      name.length >= 3 &&
       password &&
       password.length >= 6 &&
       email &&
@@ -20,19 +19,22 @@ async function signUpUser(req, res) {
         password: password,
         email: email,
       });
-      res.status(201).json({
+      return res.status(201).json({
         message: "User created Successfully",
-        user : newUser,
-      })
+        user: newUser,
+      });
+    } else {
+      return res.status(400).json({
+        message: "Invalid input",
+      });
     }
-  } catch (error){
+  } catch (error) {
     res.status(500).json({
-        message:"User Creation Failed",
-    })
+      message: "User Creation Failed",
+    });
   }
 }
 
-
-module.exports ={
-    signUpUser : signUpUser,
-}
+module.exports = {
+  signUpUser: signUpUser,
+};
