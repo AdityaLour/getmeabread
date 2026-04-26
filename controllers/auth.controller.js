@@ -21,6 +21,7 @@ async function signUpUser(req, res) {
         password: hashedPassword,
         email: email,
       });
+
       const userObj = newUser.toObject();
       delete userObj.password;
       return res.status(201).json({
@@ -39,6 +40,37 @@ async function signUpUser(req, res) {
   }
 }
 
+async function loginUser(req, res) {
+  console.log("Login hit");
+  const password = req.body.password;
+  const email = req.body.email;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        message: "User Not Found",
+      });
+    }
+
+    const passwordIsCorrect = await bcrypt.compare(password, user.password);
+
+    if (passwordIsCorrect) {
+      return res.status(200).json({
+        message: "User Logged in  Successfully",
+      });
+    }
+    return res.status(401).json({
+      message: "Invalid credentials",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Login Failed",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
+  loginUser: loginUser,
 };
