@@ -1,5 +1,6 @@
 console.log("Signup route hit");
 const User = require("../models/user.model");
+const bcrypt = require("bcrypt");
 
 async function signUpUser(req, res) {
   const name = req.body.name;
@@ -14,14 +15,17 @@ async function signUpUser(req, res) {
       email &&
       email.includes("@gmail.com")
     ) {
+      const hashedPassword = await bcrypt.hash(password, 12);
       const newUser = await User.create({
         name: name,
-        password: password,
+        password: hashedPassword,
         email: email,
       });
+      const userObj = newUser.toObject();
+      delete userObj.password;
       return res.status(201).json({
         message: "User created Successfully",
-        user: newUser,
+        user: userObj,
       });
     } else {
       return res.status(400).json({
