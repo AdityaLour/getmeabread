@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const { Schema } = moongoose;
+const { Schema } = mongoose;
 
 const NoteSchema = new Schema(
   {
@@ -10,7 +10,7 @@ const NoteSchema = new Schema(
     },
     content: {
       type: String,
-      minLength: ["Write at least 15 characters", 15],
+      minLength: [15, "Write at least 15 characters"],
       required: true,
     },
     userId: {

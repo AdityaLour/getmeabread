@@ -1,12 +1,14 @@
 const User = require("../models/user.model");
+const Note = require("../models/note.model");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 async function signUpUser(req, res) {
-  const name = req.body.name;
-  const password = req.body.password;
-  const email = req.body.email;
   try {
+    const name = req.body.name;
+    const password = req.body.password;
+    const email = req.body.email;
     if (
       name &&
       name.length >= 3 &&
@@ -86,7 +88,7 @@ async function getUser(req, res) {
     const userObj = user.toObject();
     delete userObj.password;
 
-    return res.status(200).json({
+    return res.status(201).json({
       user: userObj,
     });
   } catch (error) {
@@ -96,13 +98,38 @@ async function getUser(req, res) {
   }
 }
 
+async function createNote(req, res) {
+  try {
+    const title = req.body.title;
+    const content = req.body.content;
 
-const createNote = (req, res) => {
-  res.send("create note route working");
-};
+    if (!title || !content) {
+      return res.status(400).json({
+        message: "Title and Content are required",
+      });
+    }
+
+    const userId = req.userId;
+    const newNote = await Note.create({
+      title: title,
+      content: content,
+      userId: userId,
+    });
+    return res.status(201).json({
+      newNote: newNote,
+      message: "Note is created",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to Create the note",
+    });
+  }
+}
 
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
   getUser: getUser,
+  createNote,
+  createNote,
 };
