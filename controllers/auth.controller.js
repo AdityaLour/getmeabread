@@ -126,10 +126,26 @@ async function createNote(req, res) {
   }
 }
 
+async function getNotes(req, res) {
+  try {
+    const userId = req.userId;
+    const notes = await Note.find({ userId });
+
+    return res.status(200).json({
+      notes,
+      message: "Notes Fetched Successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch notes",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
   getUser: getUser,
-  createNote,
-  createNote,
+  createNote: createNote,
+  getNotes: getNotes,
 };

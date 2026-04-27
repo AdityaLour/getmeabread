@@ -4,7 +4,8 @@ const {
   signUpUser,
   loginUser,
   getUser,
-  createNote
+  createNote,
+  getNotes,
 } = require("../controllers/auth.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
@@ -15,5 +16,5 @@ router.post("/signup", signUpUser);
 router.post("/login", loginUser);
 
 router.post("/notes", authMiddleware, createNote);
-
+router.get("/notes", authMiddleware, getNotes);
 module.exports = router;
