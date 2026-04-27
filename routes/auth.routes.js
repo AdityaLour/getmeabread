@@ -7,7 +7,8 @@ const {
   createNote,
   getNotes,
   getNoteById,
-  updateNote
+  updateNote,
+  deleteNote
 } = require("../controllers/auth.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
@@ -23,5 +24,6 @@ router.get("/notes", authMiddleware, getNotes);
 
 router.get("/notes/:id", authMiddleware, getNoteById)
 router.put("/notes/:id", authMiddleware, updateNote);
+router.delete("/notes/:id", authMiddleware, deleteNote);
 
 module.exports = router;

@@ -208,6 +208,33 @@ async function updateNote(req, res) {
   }
 }
 
+async function deleteNote(req, res) {
+  try {
+    const noteId = req.params.id;
+    const userId = req.userId;
+
+    const note = await Note.findOne({
+      _id: noteId,
+      userId: userId,
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not found",
+      });
+    }
+
+    await Note.deleteOne({ _id: noteId, userId: userId });
+    return res.status(200).json({
+      message: "Note is Deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Note Deletion failed",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
@@ -215,5 +242,6 @@ module.exports = {
   createNote: createNote,
   getNotes: getNotes,
   getNoteById: getNoteById,
-  updateNote : updateNote
+  updateNote: updateNote,
+  deleteNote: deleteNote,
 };
