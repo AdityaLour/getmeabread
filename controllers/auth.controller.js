@@ -96,6 +96,11 @@ async function getUser(req, res) {
   }
 }
 
+
+const createNote = (req, res) => {
+  res.send("create note route working");
+};
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
