@@ -142,10 +142,38 @@ async function getNotes(req, res) {
   }
 }
 
+async function getNoteById(req, res) {
+  try {
+    const noteId = req.params.id;
+    const userId = req.userId;
+
+    const note = await Note.findOne({
+      _id: noteId,
+      userId: userId,
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not found",
+      });
+    }
+
+    return res.status(200).json({
+      note,
+      message: "Note Found",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch note",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
   getUser: getUser,
   createNote: createNote,
   getNotes: getNotes,
+  getNoteById: getNoteById,
 };
