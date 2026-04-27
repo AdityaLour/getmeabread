@@ -169,6 +169,45 @@ async function getNoteById(req, res) {
   }
 }
 
+async function updateNote(req, res) {
+  try {
+    const noteId = req.params.id;
+    const userId = req.userId;
+    const { title, content } = req.body;
+
+    const note = await Note.findOne({
+      _id: noteId,
+      userId: userId,
+    });
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not found",
+      });
+    }
+
+    if (!title && !content) {
+      return res.status(400).json({
+        message: "At least one field (title or content) is required to update",
+      });
+    }
+
+    if (title) note.title = title;
+    if (content) note.content = content;
+
+    await note.save();
+
+    return res.status(200).json({
+      note,
+      message: "Note updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Update failed",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
@@ -176,4 +215,5 @@ module.exports = {
   createNote: createNote,
   getNotes: getNotes,
   getNoteById: getNoteById,
+  updateNote : updateNote
 };

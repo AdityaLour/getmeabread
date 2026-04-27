@@ -6,7 +6,8 @@ const {
   getUser,
   createNote,
   getNotes,
-  getNoteById
+  getNoteById,
+  updateNote
 } = require("../controllers/auth.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
@@ -18,6 +19,9 @@ router.post("/login", loginUser);
 
 router.post("/notes", authMiddleware, createNote);
 router.get("/notes", authMiddleware, getNotes);
+
+
 router.get("/notes/:id", authMiddleware, getNoteById)
+router.put("/notes/:id", authMiddleware, updateNote);
 
 module.exports = router;
