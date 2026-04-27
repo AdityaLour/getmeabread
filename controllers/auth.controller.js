@@ -1,6 +1,7 @@
 console.log("Signup route hit");
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 async function signUpUser(req, res) {
   const name = req.body.name;
@@ -40,6 +41,7 @@ async function signUpUser(req, res) {
   }
 }
 
+
 async function loginUser(req, res) {
   console.log("Login hit");
   const password = req.body.password;
@@ -56,6 +58,8 @@ async function loginUser(req, res) {
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
     if (passwordIsCorrect) {
+
+
       return res.status(200).json({
         message: "User Logged in  Successfully",
       });
