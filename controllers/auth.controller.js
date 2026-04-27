@@ -1,4 +1,3 @@
-console.log("Signup route hit");
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -41,9 +40,7 @@ async function signUpUser(req, res) {
   }
 }
 
-
 async function loginUser(req, res) {
-  console.log("Login hit");
   const password = req.body.password;
   const email = req.body.email;
 
@@ -58,10 +55,13 @@ async function loginUser(req, res) {
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
     if (passwordIsCorrect) {
-
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
 
       return res.status(200).json({
         message: "User Logged in  Successfully",
+        token,
       });
     }
     return res.status(401).json({
@@ -74,7 +74,30 @@ async function loginUser(req, res) {
   }
 }
 
+async function getUser(req, res) {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User Not Found",
+      });
+    }
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    return res.status(200).json({
+      user: userObj,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "failed to Fetch the User",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
+  getUser: getUser,
 };
