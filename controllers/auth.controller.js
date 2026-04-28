@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 async function signUpUser(req, res) {
   try {
     const name = req.body.name;
+    const username = req.body.username.trim().toLowerCase();
     const password = req.body.password;
     const email = req.body.email;
     if (
@@ -15,11 +16,14 @@ async function signUpUser(req, res) {
       password &&
       password.length >= 6 &&
       email &&
-      email.includes("@gmail.com")
+      email.includes("@") &&
+      username &&
+      username.length >= 3
     ) {
       const hashedPassword = await bcrypt.hash(password, 12);
       const newUser = await User.create({
         name: name,
+        username,
         password: hashedPassword,
         email: email,
       });
@@ -36,7 +40,12 @@ async function signUpUser(req, res) {
       });
     }
   } catch (error) {
-    res.status(500).json({
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Email or username already exists",
+      });
+    }
+    return res.status(500).json({
       message: "User Creation Failed",
     });
   }
@@ -263,6 +272,34 @@ async function deleteNote(req, res) {
   }
 }
 
+async function getUserProfile(req, res) {
+  try {
+    const userName = req.params.username.trim().toLowerCase();
+
+    const user = await User.findOne({ username: userName }).lean();
+    if (!user) {
+      return res.status(404).json({
+        message: "User not Found",
+      });
+    }
+
+    const notes = await Note.find({ userId: user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    delete user.password;
+
+    return res.status(200).json({
+      user,
+      notes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch the Profile",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
@@ -272,4 +309,5 @@ module.exports = {
   getNoteById: getNoteById,
   updateNote: updateNote,
   deleteNote: deleteNote,
+  getUserProfile: getUserProfile,
 };

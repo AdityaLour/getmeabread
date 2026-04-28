@@ -8,22 +8,22 @@ const {
   getNotes,
   getNoteById,
   updateNote,
-  deleteNote
+  deleteNote,
+  getUserProfile,
 } = require("../controllers/auth.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
 
-router.get("/profiles", authMiddleware, getUser);
-
+router.get("/me", authMiddleware, getUser);
 router.post("/signup", signUpUser);
 router.post("/login", loginUser);
 
 router.post("/notes", authMiddleware, createNote);
 router.get("/notes", authMiddleware, getNotes);
-
-
-router.get("/notes/:id", authMiddleware, getNoteById)
+router.get("/notes/:id", authMiddleware, getNoteById);
 router.put("/notes/:id", authMiddleware, updateNote);
 router.delete("/notes/:id", authMiddleware, deleteNote);
+
+router.get("/users/:username", getUserProfile);
 
 module.exports = router;
