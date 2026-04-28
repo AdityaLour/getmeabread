@@ -129,7 +129,22 @@ async function createNote(req, res) {
 async function getNotes(req, res) {
   try {
     const userId = req.userId;
-    const notes = await Note.find({ userId });
+
+    const search = req.query.search?.trim();
+
+    let query = { userId };
+
+    if (search) {
+      query = {
+        userId,
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { content: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const notes = await Note.find(query).lean();
 
     return res.status(200).json({
       notes,
