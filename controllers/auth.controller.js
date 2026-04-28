@@ -123,6 +123,7 @@ async function createNote(req, res) {
       title: title,
       content: content,
       userId: userId,
+      isPublic : isPublic ?? true,
     });
     return res.status(201).json({
       newNote: newNote,
@@ -283,7 +284,7 @@ async function getUserProfile(req, res) {
       });
     }
 
-    const notes = await Note.find({ userId: user._id })
+    const notes = await Note.find({ userId: user._id , isPublic: true})
       .sort({ createdAt: -1 })
       .lean();
 
