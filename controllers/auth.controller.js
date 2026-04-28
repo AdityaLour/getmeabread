@@ -305,18 +305,35 @@ async function getUserProfile(req, res) {
 
 async function getFeed(req, res) {
   try {
+    // Pagination params (safe defaults)
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    // Fetch public notes
     const notes = await Note.find({ isPublic: true })
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("userId", "username name")
       .lean();
 
+    // Total count for pagination
+    const total = await Note.countDocuments({ isPublic: true });
+
     return res.status(200).json({
-      notes,
-      message: "Feed Fetched Successfully",
+      data: notes,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     });
+
   } catch (error) {
+    console.log("ERROR (getFeed):", error);
+
     return res.status(500).json({
-      message: "failed to fetch feed",
+      message: "Failed to fetch feed",
     });
   }
 }
