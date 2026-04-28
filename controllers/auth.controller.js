@@ -129,8 +129,11 @@ async function createNote(req, res) {
 async function getNotes(req, res) {
   try {
     const userId = req.userId;
-
     const search = req.query.search?.trim();
+
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
 
     let query = { userId };
 
@@ -144,11 +147,21 @@ async function getNotes(req, res) {
       };
     }
 
-    const notes = await Note.find(query).lean();
+    const total = await Note.countDocuments(query);
+
+    const notes = await Note.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     return res.status(200).json({
       notes,
-      message: "Notes Fetched Successfully",
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      message: "Notes fetched successfully",
     });
   } catch (error) {
     return res.status(500).json({
