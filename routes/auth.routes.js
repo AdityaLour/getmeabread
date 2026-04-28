@@ -10,6 +10,7 @@ const {
   updateNote,
   deleteNote,
   getUserProfile,
+  getFeed,
 } = require("../controllers/auth.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
@@ -25,5 +26,6 @@ router.put("/notes/:id", authMiddleware, updateNote);
 router.delete("/notes/:id", authMiddleware, deleteNote);
 
 router.get("/users/:username", getUserProfile);
+router.get("/feed", getFeed);
 
 module.exports = router;

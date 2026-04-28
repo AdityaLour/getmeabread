@@ -111,6 +111,7 @@ async function createNote(req, res) {
   try {
     const title = req.body.title;
     const content = req.body.content;
+    const isPublic = req.body.isPublic;
 
     if (!title || !content) {
       return res.status(400).json({
@@ -119,11 +120,12 @@ async function createNote(req, res) {
     }
 
     const userId = req.userId;
+    console.log("USER ID:", req.userId);
     const newNote = await Note.create({
       title: title,
       content: content,
       userId: userId,
-      isPublic : isPublic ?? true,
+      isPublic: isPublic ?? true,
     });
     return res.status(201).json({
       newNote: newNote,
@@ -284,7 +286,7 @@ async function getUserProfile(req, res) {
       });
     }
 
-    const notes = await Note.find({ userId: user._id , isPublic: true})
+    const notes = await Note.find({ userId: user._id, isPublic: true })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -301,6 +303,24 @@ async function getUserProfile(req, res) {
   }
 }
 
+async function getFeed(req, res) {
+  try {
+    const notes = await Note.find({ isPublic: true })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username name")
+      .lean();
+
+    return res.status(200).json({
+      notes,
+      message: "Feed Fetched Successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "failed to fetch feed",
+    });
+  }
+}
+
 module.exports = {
   signUpUser: signUpUser,
   loginUser: loginUser,
@@ -311,4 +331,5 @@ module.exports = {
   updateNote: updateNote,
   deleteNote: deleteNote,
   getUserProfile: getUserProfile,
+  getFeed : getFeed
 };
