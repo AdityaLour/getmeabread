@@ -18,10 +18,14 @@ const NoteSchema = new Schema(
       ref: "User",
       required: true,
     },
-    isPublic:{
+    isPublic: {
       type: Boolean,
       default: true,
-    }
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

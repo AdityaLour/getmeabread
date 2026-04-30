@@ -187,16 +187,33 @@ async function getNoteById(req, res) {
     const noteId = req.params.id;
     const userId = req.userId;
 
-    const note = await Note.findOne({
-      _id: noteId,
-      userId: userId,
-    });
+    const note = await Note.findOneAndUpdate(
+      {
+        _id: noteId,
+        $or: [
+          {
+            isPublic: true,
+          },
+          {
+            userId: userId,
+          },
+        ],
+      },
+      {
+        $inc: { views: 1 },
+      },
+      {
+        new: true,
+      },
+    );
 
     if (!note) {
       return res.status(404).json({
         message: "Note not found",
       });
     }
+
+    note.toObject();
 
     return res.status(200).json({
       note,
