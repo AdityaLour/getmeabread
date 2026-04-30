@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const Note = require("../models/note.model");
+const Like = require("../models/like.model");
 
 async function createNote(req, res) {
   try {
@@ -61,8 +62,21 @@ async function getNotes(req, res) {
       .limit(limit)
       .lean();
 
+    const noteIds = notes.map((note) => note._id);
+    const userLikes = await Like.find({
+      userid: req.userId,
+      noteId: { $in: noteIds },
+    }).lean();
+
+    const likedSet = new Set(userLikes.map((like) => like.noteId.toString()));
+
+    const notesWithLikeInfo = notes.map(note => ({
+      ...note,
+      likedByme: likedSet.has(note._id.toString()),
+    }));
+
     return res.status(200).json({
-      notes,
+      data: notesWithLikeInfo,
       page,
       limit,
       total,
@@ -334,6 +348,73 @@ async function search(req, res) {
   }
 }
 
+async function likeNote(req, res) {
+  try {
+    const noteId = req.params.id;
+    const userId = req.userId;
+
+    const note = await Note.findById(noteId);
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not Found",
+      });
+
+      await Like.create({
+        userId,
+        noteId,
+      });
+
+      const likesCount = await Like.countDocuments({ noteId });
+
+      return res.status(201).json({
+        message: "Liked Successfully",
+        likeCount,
+      });
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Already liked",
+      });
+    }
+    return res.status(500).json({
+      message: "Failed to like the post",
+    });
+  }
+}
+
+async function unlikeNote(req, res) {
+  try {
+    const noteId = req.params.id;
+    const userId = req.userId;
+
+    const note = await Note.findById(noteId);
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not Found",
+      });
+    }
+
+    await Like.deleteOne({
+      userId,
+      noteId,
+    });
+
+    const likesCount = await Like.countDocuments({ noteId });
+
+    return res.status(201).json({
+      message: "UnLiked Successfully",
+      likeCount,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to Unlike the post",
+    });
+  }
+}
+
 module.exports = {
   createNote: createNote,
   getNotes: getNotes,
@@ -343,4 +424,6 @@ module.exports = {
   getUserProfile: getUserProfile,
   getFeed: getFeed,
   search: search,
+  likeNote: likeNote,
+  unlikeNote: unlikeNote,
 };

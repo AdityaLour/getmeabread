@@ -9,6 +9,8 @@ const {
   deleteNote,
   getUserProfile,
   getFeed,
+  likeNote,
+  unlikeNote,
 } = require("../controllers/note.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");

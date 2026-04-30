@@ -16,6 +16,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/auth", noteRoutes);
 
 connectdb().then(() => {
   app.listen(PORT, () => {
