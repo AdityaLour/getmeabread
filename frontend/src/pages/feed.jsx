@@ -3,7 +3,7 @@ import api from "../api/axios";
 
 function Feed() {
   const [notes, setNotes] = useState([]);
-  const [loadingId, setLoadingId] = useState(null);
+  const [loadingIds, setLoadingIds] = useState([]);
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -19,11 +19,11 @@ function Feed() {
   }, []);
 
   const handleLike = async (noteId) => {
-    if (loadingId === noteId) return;
+    if (loadingIds.includes(noteId)) return;
+
+    setLoadingIds((prev) => [...prev, noteId]);
 
     try {
-      setLoadingId(noteId);
-
       const res = await api.post(`/api/notes/${noteId}/toggle-like`);
 
       setNotes((prev) =>
@@ -38,9 +38,9 @@ function Feed() {
         ),
       );
     } catch (err) {
-      console.log("Like error:", err);
+      console.log(err);
     } finally {
-      setLoadingId(null);
+      setLoadingIds((prev) => prev.filter((id) => id !== noteId));
     }
   };
 
@@ -61,9 +61,13 @@ function Feed() {
 
           <button
             onClick={() => handleLike(note._id)}
-            disabled={loadingId === note._id}
+            disabled={loadingIds.includes(note._id)}
           >
-            {note.likedByMe ? "Unlike" : "Like"}
+            {loadingIds.includes(note._id)
+              ? "..."
+              : note.likedByMe
+                ? "❤️ Unlike"
+                : "🤍Like"}
           </button>
         </div>
       ))}

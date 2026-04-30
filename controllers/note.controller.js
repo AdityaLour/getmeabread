@@ -236,19 +236,28 @@ async function getFeed(req, res) {
 
     const likedNoteIds = new Set(likes.map((l) => l.noteId.toString()));
 
+    // get all counts in ONE query
+    const counts = await Like.aggregate([
+      {
+        $group: {
+          _id: "$noteId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const countMap = {};
+    counts.forEach((c) => {
+      countMap[c._id.toString()] = c.count;
+    });
+
     const result = notes.map((note) => ({
       ...note,
       likedByMe: likedNoteIds.has(note._id.toString()),
+      likesCount: countMap[note._id.toString()] || 0,
     }));
 
-    // also attach likesCount
-    for (let note of result) {
-      note.likesCount = await Like.countDocuments({ noteId: note._id });
-    }
-
-    return res.status(200).json({
-      data: result,
-    });
+    return res.status(200).json({ data: result });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Error fetching feed" });
