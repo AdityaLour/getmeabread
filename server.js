@@ -5,6 +5,7 @@ const PORT = 5000;
 
 const connectdb = require("./config/db.js");
 const authRoutes = require("./routes/auth.routes.js");
+const noteRoutes = require("./routes/note.routes.js");
 
 const app = express();
 
