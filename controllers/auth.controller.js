@@ -305,12 +305,10 @@ async function getUserProfile(req, res) {
 
 async function getFeed(req, res) {
   try {
-    // Pagination params (safe defaults)
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
     const skip = (page - 1) * limit;
 
-    // Fetch public notes
     const notes = await Note.find({ isPublic: true })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -318,7 +316,6 @@ async function getFeed(req, res) {
       .populate("userId", "username name")
       .lean();
 
-    // Total count for pagination
     const total = await Note.countDocuments({ isPublic: true });
 
     return res.status(200).json({
@@ -328,12 +325,88 @@ async function getFeed(req, res) {
       total,
       totalPages: Math.ceil(total / limit),
     });
-
   } catch (error) {
     console.log("ERROR (getFeed):", error);
 
     return res.status(500).json({
       message: "Failed to fetch feed",
+    });
+  }
+}
+
+async function search(req, res) {
+  try {
+    const search = req.query.search?.trim();
+
+    if (!search) {
+      return res.json({
+        users: { data: [], total: 0, page: 1 },
+        notes: { data: [], total: 0, page: 1 },
+      });
+    }
+
+    const userPage = Math.max(1, parseInt(req.query.userPage) || 1);
+    const userLimit = Math.min(20, parseInt(req.query.userLimit) || 5);
+
+    const notePage = Math.max(1, parseInt(req.query.notePage) || 1);
+    const noteLimit = Math.min(20, parseInt(req.query.noteLimit) || 5);
+
+    const userSkip = (userPage - 1) * userLimit;
+    const noteSkip = (notePage - 1) * noteLimit;
+
+    const noteQuery = {
+      isPublic: true,
+      $or: [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const userQuery = {
+      $or: [
+        { username: { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: "i" } },
+        ,
+      ],
+    };
+
+    const [users, notes, totalUsers, totalNotes] = await Promise.all([
+      User.find(userQuery)
+        .skip(userSkip)
+        .limit(userLimit)
+        .select("username name")
+        .lean(),
+      Note.find(noteQuery)
+        .skip(noteSkip)
+        .limit(noteLimit)
+        .populate("userId", "username name")
+        .lean(),
+
+      User.countDocuments(userQuery),
+      Note.countDocuments(noteQuery),
+    ]);
+
+    return res.status(200).json({
+      users: {
+        data: users,
+        page: userPage,
+        limit: userLimit,
+        total: totalUsers,
+        totalPages: Math.ceil(totalUsers / userLimit),
+      },
+
+      notes: {
+        data: notes,
+        page: notePage,
+        limit: noteLimit,
+        total: totalNotes,
+        totalPages: Math.ceil(totalNotes / noteLimit),
+      },
+    });
+  } catch (error) {
+    console.log("Error: ", error);
+    return res.status(500).json({
+      message: "Failed to Search",
     });
   }
 }
@@ -348,5 +421,6 @@ module.exports = {
   updateNote: updateNote,
   deleteNote: deleteNote,
   getUserProfile: getUserProfile,
-  getFeed : getFeed
+  getFeed: getFeed,
+  search: search,
 };
