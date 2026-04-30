@@ -9,8 +9,7 @@ const {
   deleteNote,
   getUserProfile,
   getFeed,
-  likeNote,
-  unlikeNote,
+  toggleLike,
 } = require("../controllers/note.controller");
 
 const { authMiddleware } = require("../middleware/auth.middleware");
@@ -23,5 +22,7 @@ router.delete("/notes/:id", authMiddleware, deleteNote);
 
 router.get("/users/:username", getUserProfile);
 router.get("/feed", getFeed);
+router.post("/:id/toggle-like", authMiddleware, toggleLike);
+
 
 module.exports = router;

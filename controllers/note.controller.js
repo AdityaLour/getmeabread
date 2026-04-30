@@ -70,7 +70,7 @@ async function getNotes(req, res) {
 
     const likedSet = new Set(userLikes.map((like) => like.noteId.toString()));
 
-    const notesWithLikeInfo = notes.map(note => ({
+    const notesWithLikeInfo = notes.map((note) => ({
       ...note,
       likedByme: likedSet.has(note._id.toString()),
     }));
@@ -228,46 +228,30 @@ async function getUserProfile(req, res) {
 
 async function getFeed(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
-    const skip = (page - 1) * limit;
-
-    let sortOption = req.query.sort?.trim().toLowerCase();
-    if (sortOption === "views") {
-      sortOption = { views: -1 };
-    } else if (sortOption === "trending") {
-      sortOption = {
-        views: -1,
-        createdAt: -1,
-      };
-    } else {
-      sortOption = {
-        createdAt: -1,
-      };
-    }
-
     const notes = await Note.find({ isPublic: true })
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
-      .populate("userId", "username name")
+      .populate("userId", "username")
       .lean();
 
-    const total = await Note.countDocuments({ isPublic: true });
+    const likes = await Like.find({ userId: req.userId });
+
+    const likedNoteIds = new Set(likes.map((l) => l.noteId.toString()));
+
+    const result = notes.map((note) => ({
+      ...note,
+      likedByMe: likedNoteIds.has(note._id.toString()),
+    }));
+
+    // also attach likesCount
+    for (let note of result) {
+      note.likesCount = await Like.countDocuments({ noteId: note._id });
+    }
 
     return res.status(200).json({
-      data: notes,
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
+      data: result,
     });
-  } catch (error) {
-    console.log("ERROR (getFeed):", error);
-
-    return res.status(500).json({
-      message: "Failed to fetch feed",
-    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Error fetching feed" });
   }
 }
 
@@ -348,73 +332,39 @@ async function search(req, res) {
   }
 }
 
-async function likeNote(req, res) {
+async function toggleLike(req, res) {
   try {
     const noteId = req.params.id;
     const userId = req.userId;
 
-    const note = await Note.findById(noteId);
+    console.log("toggle like hit:", noteId);
 
-    if (!note) {
-      return res.status(404).json({
-        message: "Note not Found",
-      });
+    const existing = await Like.findOne({ userId, noteId });
 
-      await Like.create({
-        userId,
-        noteId,
-      });
+    if (existing) {
+      await Like.deleteOne({ _id: existing._id });
 
       const likesCount = await Like.countDocuments({ noteId });
 
-      return res.status(201).json({
-        message: "Liked Successfully",
-        likeCount,
-      });
-    }
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Already liked",
-      });
-    }
-    return res.status(500).json({
-      message: "Failed to like the post",
-    });
-  }
-}
-
-async function unlikeNote(req, res) {
-  try {
-    const noteId = req.params.id;
-    const userId = req.userId;
-
-    const note = await Note.findById(noteId);
-
-    if (!note) {
-      return res.status(404).json({
-        message: "Note not Found",
+      return res.status(200).json({
+        liked: false,
+        likesCount,
       });
     }
 
-    await Like.deleteOne({
-      userId,
-      noteId,
-    });
+    await Like.create({ userId, noteId });
 
     const likesCount = await Like.countDocuments({ noteId });
 
-    return res.status(201).json({
-      message: "UnLiked Successfully",
-      likeCount,
+    return res.status(200).json({
+      liked: true,
+      likesCount,
     });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Failed to Unlike the post",
-    });
+  } catch (err) {
+    console.log("ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 }
-
 module.exports = {
   createNote: createNote,
   getNotes: getNotes,
@@ -424,6 +374,5 @@ module.exports = {
   getUserProfile: getUserProfile,
   getFeed: getFeed,
   search: search,
-  likeNote: likeNote,
-  unlikeNote: unlikeNote,
+  toggleLike: toggleLike,
 };
