@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/login";
 import Feed from "./pages/feed";
 import NoteDetail from "./pages/NoteDetail";
+import FinalSearch from "./pages/Search";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Route path="/" element={<Login />}></Route>
         <Route path="/feed" element={<Feed />} />
         <Route path="/notes/:id" element={<NoteDetail />} />
+        <Route path="/search" element={<FinalSearch />} />
       </Routes>
     </BrowserRouter>
   );
