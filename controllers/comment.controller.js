@@ -15,7 +15,7 @@ async function addComment(req, res) {
       });
     }
 
-    if (!mongoose.Types.ObjectId(noteId)) {
+    if (!mongoose.Types.ObjectId.isValid(noteId)) {
       return res.status(400).json({
         message: "Invalid note id",
       });
@@ -27,11 +27,13 @@ async function addComment(req, res) {
       });
     }
 
-    const newComment = await Comment.create({
+    let newComment = await Comment.create({
       userId: userId,
       noteId: noteId,
       text: text,
     });
+
+    newComment = await newComment.populate("userId", "username");
 
     return res.status(201).json({
       message: "Comment added successfully",

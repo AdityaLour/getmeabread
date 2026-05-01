@@ -1,12 +1,11 @@
 const User = require("../models/user.model");
 const Note = require("../models/note.model");
 const Like = require("../models/like.model");
+const mongoose = require("mongoose");
 
 async function createNote(req, res) {
   try {
-    const title = req.body.title;
-    const content = req.body.content;
-    const isPublic = req.body.isPublic;
+    const { title, content, desc, isPublic } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({
@@ -19,7 +18,9 @@ async function createNote(req, res) {
     const newNote = await Note.create({
       title: title,
       content: content,
+      desc: desc,
       userId: userId,
+
       isPublic: isPublic ?? true,
     });
     return res.status(201).json({
@@ -27,6 +28,7 @@ async function createNote(req, res) {
       message: "Note is created",
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "Failed to Create the note",
     });
@@ -92,43 +94,23 @@ async function getNotes(req, res) {
 
 async function getNoteById(req, res) {
   try {
-    const noteId = req.params.id;
-    const userId = req.userId;
-
-    const note = await Note.findOneAndUpdate(
-      {
-        _id: noteId,
-        $or: [
-          {
-            isPublic: true,
-          },
-          {
-            userId: userId,
-          },
-        ],
-      },
-      {
-        $inc: { views: 1 },
-      },
-      {
-        new: true,
-      },
-    );
+    const note = await Note.findById(req.params.id)
+      .populate("userId", "username");
 
     if (!note) {
-      return res.status(404).json({
-        message: "Note not found",
-      });
+      return res.status(404).json({ message: "Note not found" });
     }
 
-    return res.status(200).json({
-      note,
-      message: "Note Found",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch note",
-    });
+    // allow if public OR owner
+    if (!note.isPublic && note.userId._id.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    return res.status(200).json({ note });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Error fetching note" });
   }
 }
 
@@ -232,7 +214,7 @@ async function getFeed(req, res) {
       .populate("userId", "username")
       .lean();
 
-    const likes = await Like.find({ userId: req.userId });
+    const likes = req.userId ? await Like.find({ userId: req.userId }) : [];
 
     const likedNoteIds = new Set(likes.map((l) => l.noteId.toString()));
 
@@ -257,7 +239,7 @@ async function getFeed(req, res) {
       likesCount: countMap[note._id.toString()] || 0,
     }));
 
-    return res.status(200).json({ data: result });
+    return res.status(200).json({ notes: result });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Error fetching feed" });

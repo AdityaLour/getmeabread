@@ -26,6 +26,11 @@ const NoteSchema = new Schema(
       type: Number,
       default: 0,
     },
+    desc: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   { timestamps: true },
 );

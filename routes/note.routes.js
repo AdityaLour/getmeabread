@@ -14,14 +14,14 @@ const {
 
 const { authMiddleware } = require("../middleware/auth.middleware");
 
-router.post("/notes", authMiddleware, createNote);
-router.get("/notes", authMiddleware, getNotes);
-router.get("/notes/:id", authMiddleware, getNoteById);
-router.put("/notes/:id", authMiddleware, updateNote);
-router.delete("/notes/:id", authMiddleware, deleteNote);
+router.get("/feed", getFeed);
+router.post("/", authMiddleware, createNote);
+router.get("/", authMiddleware, getNotes);
+router.get("/:id", authMiddleware, getNoteById);
+router.put("/:id", authMiddleware, updateNote);
+router.delete("/:id", authMiddleware, deleteNote);
 
 router.get("/users/:username", getUserProfile);
-router.get("/feed", getFeed);
 router.post("/:id/toggle-like", authMiddleware, toggleLike);
 
 
