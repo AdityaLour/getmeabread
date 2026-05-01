@@ -12,11 +12,11 @@ function FinalSearch() {
 
   useEffect(() => {
     const delay = setTimeout(() => {
-      if (query.trim()) {
-        fetchResults();
-      } else {
+      if (query.trim().length < 2) {
         setResults({ users: [], notes: [] });
+        return;
       }
+      fetchResults();
     }, 400);
 
     return () => clearTimeout(delay);
@@ -27,7 +27,10 @@ function FinalSearch() {
       setLoading(true);
       setError("");
 
-      const res = await api.get(`/api/search?q=${query}`);
+      const res = await api.get("/api/search", {
+        params: { q: query.trim() },
+      });
+
       setResults(res.data);
     } catch (err) {
       setError("Search failed");
@@ -73,7 +76,10 @@ function FinalSearch() {
         <>
           <h3>Notes</h3>
           {results.notes.map((note) => (
-            <div key={note._id} onClick={() => navigate(`/notes/${note._id}`)}>
+            <div
+              key={note._id}
+              onClick={() => navigate(`/notes/${note._id}`)}
+            >
               <strong>{note.title}</strong>
               <p>by {note.userId?.username}</p>
             </div>

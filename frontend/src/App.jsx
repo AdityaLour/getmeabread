@@ -1,19 +1,20 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/login";
-import Feed from "./pages/feed";
+import Navbar from "./components/Navbar";
+
+import Feed from "./pages/Feed";
 import NoteDetail from "./pages/NoteDetail";
-import FinalSearch from "./pages/Search";
 
 function App() {
   return (
     <BrowserRouter>
+      <Navbar />
+
       <Routes>
-        <Route path="/" element={<Login />}></Route>
         <Route path="/feed" element={<Feed />} />
         <Route path="/notes/:id" element={<NoteDetail />} />
-        <Route path="/search" element={<FinalSearch />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;
