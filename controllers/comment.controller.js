@@ -6,7 +6,7 @@ const { default: mongoose } = require("mongoose");
 async function addComment(req, res) {
   try {
     const noteId = req.params.id;
-    const userId = req.userId;
+    const userId = req.user.id;
     const text = req.body.text;
 
     if (!text || text.trim().length === 0) {
