@@ -30,18 +30,6 @@ const UserSchema = new Schema(
       required: true,
       minLength: [6, "Password should be atleast 6 digits long"],
     },
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
   },
   { timestamps: true },
 );

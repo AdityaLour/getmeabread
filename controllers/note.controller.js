@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 const Note = require("../models/note.model");
 const Like = require("../models/like.model");
+const Follow = require("../models/follow.model");
 const mongoose = require("mongoose");
 
 async function createNote(req, res) {
@@ -204,43 +205,59 @@ async function deleteNote(req, res) {
 
 async function getUserProfile(req, res) {
   try {
-    const userName = req.params.username.trim().toLowerCase();
+    const username = req.params.username.trim().toLowerCase();
 
-    const user = await User.findOne({ username: userName }).lean();
+    const userDoc = await User.findOne({
+      username: new RegExp(`^${username}$`, "i"),
+    }).select("-password");
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+    if (!userDoc) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const isOwner = req.user && req.user.id === user._id.toString();
+    const userId = new mongoose.Types.ObjectId(userDoc._id);
+    const currentUserId = req.user ? req.user.id : null;
 
-    const type = req.query.type;
+    const isOwner = currentUserId
+      ? currentUserId.toString() === userId.toString()
+      : false;
 
-    let filter = { userId: user._id };
-
+    let filter = { userId };
     if (!isOwner) {
       filter.isPublic = true;
     } else {
-      if (type === "private") filter.isPublic = false;
-      else filter.isPublic = true; // default public
+      filter.isPublic = req.query.type === "private" ? false : true;
     }
 
-    const notes = await Note.find(filter).sort({ createdAt: -1 }).lean();
+    const [notes, followersCount, followingCount] = await Promise.all([
+      Note.find(filter).sort({ createdAt: -1 }).lean(),
+      Follow.countDocuments({ following: userId }),
+      Follow.countDocuments({ follower: userId }),
+    ]);
 
-    delete user.password;
+    let isFollowing = false;
+    if (currentUserId && !isOwner) {
+      const exists = await Follow.exists({
+        follower: new mongoose.Types.ObjectId(currentUserId),
+        following: userId,
+      });
+      isFollowing = !!exists;
+    }
 
-    return res.status(200).json({
-      user,
+
+    return res.json({
+      user: {
+        ...userDoc.toObject(),
+        followersCount,
+        followingCount,
+      },
       notes,
       isOwner,
+      isFollowing,
     });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Failed to fetch profile",
-    });
+  } catch (err) {
+    console.log("PROFILE ERROR:", err);
+    return res.status(500).json({ message: "Failed to fetch profile" });
   }
 }
 
@@ -254,7 +271,6 @@ async function getFeed(req, res) {
 
     const likedNoteIds = new Set(likes.map((l) => l.noteId.toString()));
 
-    // get all counts in ONE query
     const counts = await Like.aggregate([
       {
         $group: {

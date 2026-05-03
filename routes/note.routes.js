@@ -7,21 +7,25 @@ const {
   getNoteById,
   updateNote,
   deleteNote,
-  getUserProfile,
   getFeed,
   toggleLike,
 } = require("../controllers/note.controller");
 
-const { authMiddleware } = require("../middleware/auth.middleware");
+const { requireAuth, optionalAuth } = require("../middleware/auth.middleware");
 
-router.get("/feed", getFeed);
-router.post("/", authMiddleware, createNote);
-router.get("/", authMiddleware, getNotes);
-router.get("/:id", authMiddleware, getNoteById);
-router.put("/:id", authMiddleware, updateNote);
-router.delete("/:id", authMiddleware, deleteNote);
-
-router.get("/users/:username", authMiddleware, getUserProfile);
-router.post("/:id/toggle-like", authMiddleware, toggleLike);
+router.get(
+  "/feed",
+  (req, res, next) => {
+    console.log("/Feed router hitt");
+    next();
+  },
+  getFeed,
+);
+router.post("/", requireAuth, createNote);
+router.get("/", optionalAuth, getNotes);
+router.get("/:id", optionalAuth, getNoteById);
+router.put("/:id", requireAuth, updateNote);
+router.delete("/:id", requireAuth, deleteNote);
+router.post("/:id/toggle-like", requireAuth, toggleLike);
 
 module.exports = router;

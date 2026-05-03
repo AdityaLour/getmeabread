@@ -1,35 +1,54 @@
 const jwt = require("jsonwebtoken");
 
-function authMiddleware(req, res, next) {
+function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-
 
   if (!authHeader) {
     return res.status(401).json({
-      message: "No token provided",
+      message: "Authentication required",
     });
   }
 
-  const parts = authHeader.split(" ");
-
-  if (parts.length !== 2 || parts[0] !== "Bearer") {
-    return res.status(401).json({
-      message: "Invalid token format",
-    });
-  }
-
-  const token = parts[1];
   try {
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id || decoded._id };
+
+    req.user = {
+      id: String(decoded.id || decoded._id),
+    };
+
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({
       message: "Invalid token",
     });
   }
 }
 
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = {
+      id: String(decoded.id || decoded._id),
+    };
+
+    next();
+  } catch(err) {
+    req.user = null;
+    next();
+  }
+}
+
 module.exports = {
-  authMiddleware,
+  requireAuth,
+  optionalAuth
 };

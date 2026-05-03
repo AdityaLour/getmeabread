@@ -5,9 +5,9 @@ const {
   addComment,
   getComments,
 } = require("../controllers/comment.controller");
-const { authMiddleware } = require("../middleware/auth.middleware");
+const { requireAuth } = require("../middleware/auth.middleware");
 
-router.post("/notes/:id/comments", authMiddleware, addComment);
+router.post("/notes/:id/comments", requireAuth, addComment);
 router.get("/notes/:id/comments", getComments);
 
 module.exports = router;

@@ -6,9 +6,13 @@ const {
   getUser,
 } = require("../controllers/auth.controller");
 
-const { authMiddleware } = require("../middleware/auth.middleware");
+const {
+  authMiddleware,
+  optionalAuth,
+  requireAuth,
+} = require("../middleware/auth.middleware");
 
-router.get("/me", authMiddleware, getUser);
+router.get("/me", optionalAuth, getUser);
 router.post("/signup", signUpUser);
 router.post("/login", loginUser);
 

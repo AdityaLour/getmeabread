@@ -9,6 +9,7 @@ const noteRoutes = require("./routes/note.routes.js");
 const commentRoutes = require("./routes/comment.route.js");
 const searchRoutes = require("./routes/search.routes.js");
 const userRoutes = require("./routes/user.routes.js");
+const followRoutes = require("./routes/follow.routes.js");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/notes", noteRoutes);
 app.use("/api", commentRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/follow", followRoutes);
 
 connectdb().then(() => {
   app.listen(PORT, () => {
