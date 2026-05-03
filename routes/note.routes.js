@@ -21,8 +21,7 @@ router.get("/:id", authMiddleware, getNoteById);
 router.put("/:id", authMiddleware, updateNote);
 router.delete("/:id", authMiddleware, deleteNote);
 
-router.get("/users/:username", getUserProfile);
+router.get("/users/:username", authMiddleware, getUserProfile);
 router.post("/:id/toggle-like", authMiddleware, toggleLike);
-
 
 module.exports = router;

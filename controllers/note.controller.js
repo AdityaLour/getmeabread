@@ -96,7 +96,7 @@ async function getNoteById(req, res) {
   try {
     const note = await Note.findById(req.params.id).populate(
       "userId",
-      "username"
+      "username",
     );
 
     if (!note) {
@@ -121,7 +121,6 @@ async function getNoteById(req, res) {
       isLiked = !!existingLike;
     }
 
-    // 🔥 ADD THIS (CRITICAL)
     const likesCount = await Like.countDocuments({
       noteId: note._id,
     });
@@ -131,7 +130,6 @@ async function getNoteById(req, res) {
       isLiked,
       likesCount, // 🔥 REQUIRED
     });
-
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Error fetching note" });
@@ -209,25 +207,39 @@ async function getUserProfile(req, res) {
     const userName = req.params.username.trim().toLowerCase();
 
     const user = await User.findOne({ username: userName }).lean();
+
     if (!user) {
       return res.status(404).json({
-        message: "User not Found",
+        message: "User not found",
       });
     }
 
-    const notes = await Note.find({ userId: user._id, isPublic: true })
-      .sort({ createdAt: -1 })
-      .lean();
+    const isOwner = req.user && req.user.id === user._id.toString();
+
+    const type = req.query.type;
+
+    let filter = { userId: user._id };
+
+    if (!isOwner) {
+      filter.isPublic = true;
+    } else {
+      if (type === "private") filter.isPublic = false;
+      else filter.isPublic = true; // default public
+    }
+
+    const notes = await Note.find(filter).sort({ createdAt: -1 }).lean();
 
     delete user.password;
 
     return res.status(200).json({
       user,
       notes,
+      isOwner,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
-      message: "Failed to fetch the Profile",
+      message: "Failed to fetch profile",
     });
   }
 }

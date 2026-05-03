@@ -8,27 +8,34 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("public");
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
+  useEffect(
+    () => {
+      const fetchProfile = async () => {
+        try {
+          setLoading(true);
 
-        const res = await api.get(`/api/users/${username}`);
+          const res = await api.get(`/api/users/${username}`, {
+            params: { type: tab },
+          });
 
-        setUser(res.data.user);
-        setNotes(res.data.notes);
-      } catch (err) {
-        console.log("PROFILE ERROR:", err.response?.data);
-      } finally {
-        setLoading(false);
+          setUser(res.data.user);
+          setNotes(res.data.notes);
+        } catch (err) {
+          console.log("PROFILE ERROR:", err.response?.data);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      if (username) {
+        fetchProfile();
       }
-    };
-
-    if (username) {
-      fetchProfile();
-    }
-  }, [username]);
+    },
+    [username],
+    tab,
+  );
 
   if (loading) return <p>Loading...</p>;
 
@@ -41,6 +48,10 @@ function Profile() {
       <p>Followers: {user.followersCount}</p>
       <p>Following: {user.followingCount}</p>
 
+      <div>
+        <button onClick={() => setTab("public")}>Public</button>
+        <button onClick={() => setTab("private")}>Private</button>
+      </div>
       <h3>Notes</h3>
 
       {notes.length === 0 ? (
