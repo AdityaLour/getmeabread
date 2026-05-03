@@ -19,21 +19,49 @@ function Feed() {
     fetchFeed();
   }, []);
 
-  return (
-    <div>
-      {notes.length === 0 ? (
-        <p>No notes available</p>
-      ) : (
-        notes.map((note) => (
-          <div key={note._id}>
-            <h3>{note.title}</h3>
-            <p>{note.desc}</p>
-            <p>By: {note.userId?.username}</p>
+  if (notes.length === 0) {
+    return <p>No notes available</p>;
+  }
 
-            <button onClick={() => navigate(`/notes/${note._id}`)}>View</button>
-          </div>
-        ))
-      )}
+  return (
+    <div style={{ padding: "20px" }}>
+      {notes.map((note) => (
+        <div
+          key={note._id}
+          style={{
+            border: "1px solid #ccc",
+            padding: "15px",
+            marginBottom: "15px",
+          }}
+        >
+          <h3>{note.title}</h3>
+
+          <p>{note.desc}</p>
+
+          <p>
+            <strong>By:</strong>{" "}
+            <span
+              style={{ cursor: "pointer", color: "blue" }}
+              onClick={() => {
+                if (note.userId?.username) {
+                  navigate(`/profile/${note.userId.username}`);
+                }
+              }}
+            >
+              {note.userId?.username || "Unknown"}
+            </span>
+          </p>
+
+          <p>Likes: {note.likesCount || 0}</p>
+
+          <button
+            onClick={() => navigate(`/notes/${note._id}`)}
+            style={{ marginTop: "10px" }}
+          >
+            View
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

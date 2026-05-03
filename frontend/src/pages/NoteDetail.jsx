@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 function NoteDetail() {
   const { id } = useParams();
-
   const [note, setNote] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [liking, setLiking] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,7 +76,7 @@ function NoteDetail() {
               isLiked: res.data.liked,
               likesCount: res.data.likesCount,
             }
-          : prev
+          : prev,
       );
     } catch (err) {
       console.log(err);
@@ -91,7 +93,10 @@ function NoteDetail() {
       <h1>{note.title}</h1>
 
       <p>
-        <strong>By:</strong> {note.userId?.username || "Unknown"}
+        <strong>By:</strong> {""}
+        <span onClick={() => navigate(`/profile/${note.userId?.username}`)}>
+          {note.userId?.username || "Unknown"}
+        </span>
       </p>
 
       <p>{note.content}</p>
