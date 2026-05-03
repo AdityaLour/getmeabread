@@ -37,7 +37,7 @@ async function createNote(req, res) {
 
 async function getNotes(req, res) {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
     const search = req.query.search?.trim();
 
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -66,7 +66,7 @@ async function getNotes(req, res) {
 
     const noteIds = notes.map((note) => note._id);
     const userLikes = await Like.find({
-      userid: req.userId,
+      userId: req.user.id,
       noteId: { $in: noteIds },
     }).lean();
 
@@ -74,7 +74,7 @@ async function getNotes(req, res) {
 
     const notesWithLikeInfo = notes.map((note) => ({
       ...note,
-      likedByme: likedSet.has(note._id.toString()),
+      isLiked: likedSet.has(note._id.toString()),
     }));
 
     return res.status(200).json({
@@ -94,19 +94,43 @@ async function getNotes(req, res) {
 
 async function getNoteById(req, res) {
   try {
-    const note = await Note.findById(req.params.id)
-      .populate("userId", "username");
+    const note = await Note.findById(req.params.id).populate(
+      "userId",
+      "username"
+    );
 
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    // allow if public OR owner
-    if (!note.isPublic && note.userId._id.toString() !== req.userId) {
+    if (
+      !note.isPublic &&
+      (!req.user || note.userId._id.toString() !== req.user.id)
+    ) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    return res.status(200).json({ note });
+    let isLiked = false;
+
+    if (req.user) {
+      const existingLike = await Like.findOne({
+        userId: req.user.id,
+        noteId: note._id,
+      });
+
+      isLiked = !!existingLike;
+    }
+
+    // 🔥 ADD THIS (CRITICAL)
+    const likesCount = await Like.countDocuments({
+      noteId: note._id,
+    });
+
+    return res.status(200).json({
+      note,
+      isLiked,
+      likesCount, // 🔥 REQUIRED
+    });
 
   } catch (err) {
     console.log(err);
@@ -117,7 +141,7 @@ async function getNoteById(req, res) {
 async function updateNote(req, res) {
   try {
     const noteId = req.params.id;
-    const userId = req.userId;
+    const userId = req.user.id;
     const { title, content } = req.body;
 
     const note = await Note.findOne({
@@ -156,7 +180,7 @@ async function updateNote(req, res) {
 async function deleteNote(req, res) {
   try {
     const noteId = req.params.id;
-    const userId = req.userId;
+    const userId = req.user.id;
 
     const note = await Note.findOne({
       _id: noteId,
@@ -235,7 +259,7 @@ async function getFeed(req, res) {
 
     const result = notes.map((note) => ({
       ...note,
-      likedByMe: likedNoteIds.has(note._id.toString()),
+      isLiked: likedNoteIds.has(note._id.toString()),
       likesCount: countMap[note._id.toString()] || 0,
     }));
 
@@ -326,7 +350,7 @@ async function search(req, res) {
 async function toggleLike(req, res) {
   try {
     const noteId = req.params.id;
-    const userId = req.userId;
+    const userId = req.user.id;
 
     console.log("toggle like hit:", noteId);
 

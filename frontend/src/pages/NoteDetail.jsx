@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api/axios"; // your axios instance
+import api from "../api/axios";
 
 function NoteDetail() {
   const { id } = useParams();
@@ -18,10 +18,17 @@ function NoteDetail() {
 
       try {
         const noteRes = await api.get(`/api/notes/${id}`);
-
         const commentRes = await api.get(`/api/notes/${id}/comments`);
 
-        setNote(noteRes.data.note || noteRes.data);
+        const data = noteRes.data;
+
+        // ✅ IMPORTANT: include isLiked + likesCount
+        setNote({
+          ...data.note,
+          isLiked: data.isLiked,
+          likesCount: data.likesCount,
+        });
+
         setComments(commentRes.data.comments || []);
       } catch (err) {
         console.log(err);
@@ -43,9 +50,7 @@ function NoteDetail() {
         text,
       });
 
-
       setComments((prev) => [res.data.newComment, ...prev]);
-
       setText("");
     } catch (err) {
       console.log(err);
@@ -56,6 +61,9 @@ function NoteDetail() {
 
   const handleLike = async () => {
     if (liking) return;
+
+    setLiking(true);
+
     try {
       const res = await api.post(`/api/notes/${id}/toggle-like`);
 
@@ -63,10 +71,10 @@ function NoteDetail() {
         prev
           ? {
               ...prev,
-              likedByMe: res.data.liked,
+              isLiked: res.data.liked,
               likesCount: res.data.likesCount,
             }
-          : prev,
+          : prev
       );
     } catch (err) {
       console.log(err);
@@ -81,16 +89,19 @@ function NoteDetail() {
   return (
     <div style={{ padding: "20px" }}>
       <h1>{note.title}</h1>
+
       <p>
         <strong>By:</strong> {note.userId?.username || "Unknown"}
       </p>
+
       <p>{note.content}</p>
 
       <hr />
 
-      <p>Likes : {note.likesCount || 0}</p>
+      <p>Likes: {note.likesCount || 0}</p>
+
       <button onClick={handleLike} disabled={liking}>
-        {liking ? "..." : note.likedByMe ? "❤️ Unlike" : "🤍 Like"}
+        {liking ? "..." : note.isLiked ? "❤️ Unlike" : "🤍 Like"}
       </button>
 
       <h3>Comments</h3>
