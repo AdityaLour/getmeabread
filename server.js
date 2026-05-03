@@ -8,6 +8,7 @@ const authRoutes = require("./routes/auth.routes.js");
 const noteRoutes = require("./routes/note.routes.js");
 const commentRoutes = require("./routes/comment.route.js");
 const searchRoutes = require("./routes/search.routes.js");
+const userRoutes = require("./routes/user.routes.js");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api", commentRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/users", userRoutes);
 
 connectdb().then(() => {
   app.listen(PORT, () => {

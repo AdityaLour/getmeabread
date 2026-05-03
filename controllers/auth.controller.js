@@ -52,39 +52,36 @@ async function signUpUser(req, res) {
 }
 
 async function loginUser(req, res) {
-  const password = req.body.password;
-  const email = req.body.email;
+  const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(404).json({
-        message: "User Not Found",
-      });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const passwordIsCorrect = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    if (passwordIsCorrect) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-
-      return res.status(200).json({
-        message: "User Logged in  Successfully",
-        token,
-      });
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-    return res.status(401).json({
-      message: "Invalid credentials",
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
     });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Login Failed",
+
+    return res.status(200).json({
+      message: "User logged in successfully",
+      token,
+      username: user.username, 
     });
+  } catch (err) {
+    return res.status(500).json({ message: "Login failed" });
   }
 }
 
+module.exports = { loginUser };
 async function getUser(req, res) {
   try {
     const user = await User.findById(req.userId);

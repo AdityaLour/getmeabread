@@ -1,12 +1,13 @@
 import { useState } from "react";
-import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
+
   const handleLogin = async () => {
     try {
       const res = await api.post("/api/auth/login", {
@@ -15,16 +16,12 @@ function Login() {
       });
 
       localStorage.setItem("token", res.data.token);
-      console.log("Login Success");
+      localStorage.setItem("username", res.data.username);
+
+      localStorage.removeItem("redirectAfterLogin");
       navigate("/feed");
-    } catch (error) {
-      if (error.response) {
-        console.log("Login Error:", error.response.data);
-      } else if (error.request) {
-        console.log("No response From Server");
-      } else {
-        console.log(" Error: ", error.message);
-      }
+    } catch (err) {
+      console.log(err.response?.data || err.message);
     }
   };
 
@@ -34,19 +31,19 @@ function Login() {
 
       <input
         type="email"
-        placeholder="Enter your email"
+        placeholder="Enter email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
 
       <input
         type="password"
-        placeholder="enter your password"
+        placeholder="Enter password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button onClick={handleLogin}>Login </button>
+      <button onClick={handleLogin}>Login</button>
     </div>
   );
 }

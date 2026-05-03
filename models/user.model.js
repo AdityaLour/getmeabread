@@ -15,7 +15,7 @@ const UserSchema = new Schema(
       required: true,
       unique: true,
       trim: true,
-      lowercase: true, 
+      lowercase: true,
       minLength: [3, "Username must be at least 3 characters long"],
     },
     email: {
@@ -23,13 +23,25 @@ const UserSchema = new Schema(
       required: true,
       lowercase: true,
       unique: true,
-      trim :true,
+      trim: true,
     },
     password: {
       type: String,
       required: true,
       minLength: [6, "Password should be atleast 6 digits long"],
     },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true },
 );

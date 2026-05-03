@@ -34,10 +34,24 @@ function Navbar() {
     return () => clearTimeout(delay);
   }, [query]);
 
+  const handleProfileClick = () => {
+    const username = localStorage.getItem("username");
+
+    if (!username || username.trim() === "") {
+      localStorage.setItem("redirectAfterLogin", `/profile/${username}`);
+      navigate("/login");
+      return;
+    }
+
+    navigate(`/profile/${username}`);
+  };
+
   return (
     <div>
+      {/* Logo */}
       <h2 onClick={() => navigate("/feed")}>MyApp</h2>
 
+      {/* Search */}
       <input
         type="text"
         placeholder="Search..."
@@ -45,12 +59,19 @@ function Navbar() {
         onChange={(e) => setQuery(e.target.value)}
       />
 
+      {/* Profile */}
+      <button onClick={handleProfileClick}>Profile</button>
+
+      {/* Loading */}
       {loading && <p>Searching...</p>}
 
-      {query && results.users.length === 0 && results.notes.length === 0 && !loading && (
-        <p>No results found</p>
-      )}
+      {/* No results */}
+      {query.trim().length >= 2 &&
+        results.users.length === 0 &&
+        results.notes.length === 0 &&
+        !loading && <p>No results found</p>}
 
+      {/* Users */}
       {results.users.map((user) => (
         <div
           key={user._id}
@@ -60,11 +81,9 @@ function Navbar() {
         </div>
       ))}
 
+      {/* Notes */}
       {results.notes.map((note) => (
-        <div
-          key={note._id}
-          onClick={() => navigate(`/notes/${note._id}`)}
-        >
+        <div key={note._id} onClick={() => navigate(`/notes/${note._id}`)}>
           {note.title}
         </div>
       ))}

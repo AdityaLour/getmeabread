@@ -21,8 +21,6 @@ function Feed() {
 
   return (
     <div>
-      <h2>Feed</h2>
-
       {notes.length === 0 ? (
         <p>No notes available</p>
       ) : (
@@ -32,9 +30,7 @@ function Feed() {
             <p>{note.desc}</p>
             <p>By: {note.userId?.username}</p>
 
-            <button onClick={() => navigate(`/notes/${note._id}`)}>
-              View
-            </button>
+            <button onClick={() => navigate(`/notes/${note._id}`)}>View</button>
           </div>
         ))
       )}
